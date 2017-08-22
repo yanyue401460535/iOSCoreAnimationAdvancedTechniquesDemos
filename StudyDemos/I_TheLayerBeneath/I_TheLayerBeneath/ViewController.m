@@ -6,8 +6,17 @@
 //  Copyright © 2017年 yanyue. All rights reserved.
 //
 
+#define RADIANS_TO_DEGREES(x) ((x)/M_PI*180.0)
+#define DEGREES_TO_RADIANS(x) ((x)/180.0*M_PI)
+
 #import "ViewController.h"
 #import <QuartzCore/QuartzCore.h>
+#import <GLKit/GLKit.h>
+
+//#define LIGHT_DIRECTION 0, 1, -0.5
+#define LIGHT_DIRECTION 0.5, 0.5, 0.5
+
+#define AMBIENT_LIGHT 0.5
 
 @interface ViewController ()<CALayerDelegate>
 
@@ -33,6 +42,10 @@
 
 @property (nonatomic, weak)  UIView *containerView;
 
+//5
+@property (nonatomic, weak)  UIView *outerView;
+@property (nonatomic, weak)  UIView *innerView;
+@property (nonatomic, strong)NSMutableArray *faces;
 @end
 
 @implementation ViewController
@@ -84,7 +97,44 @@
 //    [self displayingAnLCDStyleClock];
     
     //4_Visual Effects_4.7
-    [self usingShouldRasterizeToFixTheGroupedBlendingProblem];
+//    [self usingShouldRasterizeToFixTheGroupedBlendingProblem];
+    
+    //5_Transforms_5.1
+//    [self settingaCGImageastheLayercontents];
+//    [self rotatingALayerBy45DegreesUsingAffineTransform];
+    
+    //5_Transforms_5.2
+//    [self settingaCGImageastheLayercontents];
+//    [self creatingACompoundTransformUsingSeveralFunctions];
+    
+    //5_Transforms_5.3
+//    [self settingaCGImageastheLayercontents];
+//    [self implementingAShearTransform];
+
+    //5_Transforms_5.4
+//    [self settingaCGImageastheLayercontents];
+//    [self rotatingALayerAroundTheYAxis];
+    
+    //5_Transforms_5.5
+//    [self settingaCGImageastheLayercontents];
+//    [self applyingPerspectiveToTheTransform];
+    
+    //5_Transforms_5.6
+//    [self applyingASublayerTransform];
+    
+    //5_Transforms_5.7
+//    [self addOuterAndInnerView];
+//    [self oppositeRotationTransformsAroundZAxis];
+    
+    //5_Transforms_5.8
+//    [self addOuterAndInnerView];
+//    [self oppositeRotationTransformsAroundYAxis];
+
+    //5_Transforms_5.9&5.10
+    [self addFacesArray];
+    [self creatingACube];
+
+    
 }
 
 #pragma mark
@@ -295,27 +345,27 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     //get touch position relative to main view
-    CGPoint point = [[touches anyObject] locationInView:self.view];
-    //convert point to the white layer's coordinates
-    point = [self.layerView.layer convertPoint:point fromLayer:self.view.layer];
-    //get layer using containsPoint:
-    if ([self.layerView.layer containsPoint:point]) {
-        //convert point to blueLayer’s coordinates
-        point = [self.blueLayer convertPoint:point fromLayer:self.layerView.layer];
-        if ([self.blueLayer containsPoint:point]) {
-            [[[UIAlertView alloc] initWithTitle:@"Inside Blue Layer"
-                                        message:nil
-                                       delegate:nil
-                              cancelButtonTitle:@"OK"
-                              otherButtonTitles:nil] show];
-        } else {
-            [[[UIAlertView alloc] initWithTitle:@"Inside White Layer"
-                                        message:nil
-                                       delegate:nil
-                              cancelButtonTitle:@"OK"
-                              otherButtonTitles:nil] show];
-        }
-    }
+//    CGPoint point = [[touches anyObject] locationInView:self.view];
+//    //convert point to the white layer's coordinates
+//    point = [self.layerView.layer convertPoint:point fromLayer:self.view.layer];
+//    //get layer using containsPoint:
+//    if ([self.layerView.layer containsPoint:point]) {
+//        //convert point to blueLayer’s coordinates
+//        point = [self.blueLayer convertPoint:point fromLayer:self.layerView.layer];
+//        if ([self.blueLayer containsPoint:point]) {
+//            [[[UIAlertView alloc] initWithTitle:@"Inside Blue Layer"
+//                                        message:nil
+//                                       delegate:nil
+//                              cancelButtonTitle:@"OK"
+//                              otherButtonTitles:nil] show];
+//        } else {
+//            [[[UIAlertView alloc] initWithTitle:@"Inside White Layer"
+//                                        message:nil
+//                                       delegate:nil
+//                              cancelButtonTitle:@"OK"
+//                              otherButtonTitles:nil] show];
+//        }
+//    }
     
         //3.3_adjustingZPositionToChangeTheDisplayOrder
 //        point = [self.greenView.layer convertPoint:point fromLayer:self.view.layer];
@@ -480,19 +530,19 @@
     self.containerView = [self createView:[UIScreen mainScreen].bounds bgColor:[UIColor grayColor] superView:self.view];
     //create opaque button
     UIButton *button1 = [self customButton];
-    button1.center = CGPointMake(80, 150);
+    button1.center = CGPointMake([UIScreen mainScreen].bounds.size.width/2, 150);
     [self.containerView addSubview:button1];
     
     //create translucent button
     UIButton *button2 = [self customButton];
-    
-    button2.center = CGPointMake(250, 150);
+    button2.center = CGPointMake([UIScreen mainScreen].bounds.size.width/2, 250);
     button2.alpha = 0.5;
     [self.containerView addSubview:button2];
     
     //enable rasterization for the translucent button
     button2.layer.shouldRasterize = YES;
     button2.layer.rasterizationScale = [UIScreen mainScreen].scale;
+
 }
 - (UIButton *)customButton
 {
@@ -509,6 +559,231 @@
     label.textAlignment = NSTextAlignmentCenter;
     [button addSubview:label];
     return button;
+}
+
+#pragma mark
+#pragma mark 5_Transforms
+#pragma mark
+#pragma mark 5.1
+- (void)rotatingALayerBy45DegreesUsingAffineTransform
+{
+    //rotate the layer 45 degrees
+    CGAffineTransform transform = CGAffineTransformMakeRotation(M_PI_4);
+    self.layerView.layer.affineTransform = transform;
+}
+
+#pragma mark 5.2
+- (void)creatingACompoundTransformUsingSeveralFunctions
+{
+    //这里对平移的结果有点疑问，打日志方便理解
+    NSLog(@"%f,%f,%f,%f",self.layerView.frame.origin.x,self.layerView.frame.origin.y,self.layerView.frame.size.width,self.layerView.frame.size.height);
+
+    CGAffineTransform transform = CGAffineTransformIdentity; //create a new transform
+    transform = CGAffineTransformScale(transform, 0.5, 0.5); //scale by 50%
+    transform = CGAffineTransformRotate(transform, M_PI / 180.0 * 30.0); //rotate by 30 degrees
+    transform = CGAffineTransformTranslate(transform, 200,0); //translate by 200 points
+
+    //apply transform to layer
+    self.layerView.layer.affineTransform = transform;
+    
+    NSLog(@"%f,%f,%f,%f",self.layerView.frame.origin.x,self.layerView.frame.origin.y,self.layerView.frame.size.width,self.layerView.frame.size.height);
+
+}
+
+#pragma mark 5.3
+- (void)implementingAShearTransform
+{
+    //shear the layer at a 45-degree angle
+    self.layerView.layer.affineTransform = CGAffineTransformMakeShear(1, 0);
+}
+
+CGAffineTransform CGAffineTransformMakeShear(CGFloat x, CGFloat y) {
+    CGAffineTransform transform = CGAffineTransformIdentity;
+    transform.c = -x;
+    transform.b = y;
+    return transform;
+}
+
+#pragma mark 5.4
+- (void)rotatingALayerAroundTheYAxis
+{
+    //rotate the layer 45 degrees along the Y axis
+    CATransform3D transform = CATransform3DMakeRotation(M_PI_4, 0, 1, 0);
+    self.layerView.layer.transform = transform;
+}
+
+#pragma mark 5.5
+- (void)applyingPerspectiveToTheTransform
+{
+    //create a new transform
+    CATransform3D transform = CATransform3DIdentity; //apply perspective
+    transform.m34 = - 1.0 / 500.0; //rotate by 45 degrees along the Y axis
+    transform = CATransform3DRotate(transform, M_PI_4, 0, 1, 0);
+    //apply to layer
+    self.layerView.layer.transform = transform;
+}
+
+#pragma mark 5.6
+- (void)applyingASublayerTransform
+{
+    self.containerView = [self createView:CGRectMake([UIScreen mainScreen].bounds.size.width/2-150, 50, 300, 300) bgColor:[UIColor grayColor] superView:self.view];
+    self.layerView1 = [self createView:CGRectMake(10, 100, 100, 100) bgColor:[UIColor whiteColor] superView:self.containerView];
+    self.layerView2 = [self createView:CGRectMake(190, 100, 100, 100) bgColor:[UIColor whiteColor] superView:self.containerView];
+    [self addStretchableImage:[UIImage imageNamed:@"doraemon"] withContentCenter:CGRectMake(0, 0, 100, 100) toLayer:self.layerView1.layer];
+    [self addStretchableImage:[UIImage imageNamed:@"doraemon"] withContentCenter:CGRectMake(0, 0, 100, 100) toLayer:self.layerView2.layer];
+
+    
+    //apply perspective transform to container
+    CATransform3D perspective = CATransform3DIdentity;
+    perspective.m34 = - 1.0 / 500.0;
+    self.containerView.layer.sublayerTransform = perspective;
+    
+    //rotate layerView1 by 45 degrees along the Y axis
+    CATransform3D transform1 = CATransform3DMakeRotation(M_PI_4, 0, 1, 0);
+    self.layerView1.layer.transform = transform1;
+    //rotate layerView2 by 45 degrees along the Y axis
+    CATransform3D transform2 = CATransform3DMakeRotation(-M_PI_4, 0, 1, 0);
+    self.layerView2.layer.transform = transform2;
+}
+
+#pragma mark 5.6
+- (void)oppositeRotationTransformsAroundZAxis
+{
+    //rotate the outer layer 45 degrees
+    CATransform3D outer = CATransform3DMakeRotation(M_PI_4, 0, 0, 1);
+    self.outerView.layer.transform = outer;
+    
+    //rotate the inner layer -45 degrees
+    CATransform3D inner = CATransform3DMakeRotation(-M_PI_4, 0, 0, 1);
+    self.innerView.layer.transform = inner;
+}
+
+- (void)addOuterAndInnerView
+{
+    self.outerView = [self createView:CGRectMake([UIScreen mainScreen].bounds.size.width/2-100, 50, 200, 200) bgColor:[UIColor whiteColor] superView:self.view];
+    self.innerView = [self createView:CGRectMake(50, 50, 100, 100) bgColor:[UIColor lightGrayColor] superView:self.outerView];
+
+    //rotate the layer 45 degrees
+    CGAffineTransform transform = CGAffineTransformMakeRotation(M_PI_4);
+    self.outerView.layer.affineTransform = transform;
+    self.innerView.layer.affineTransform = transform;
+
+}
+
+#pragma mark 5.7
+- (void)oppositeRotationTransformsAroundYAxis
+{
+    //rotate the outer layer 45 degrees
+    CATransform3D outer = CATransform3DIdentity;
+    outer.m34 = -1.0 / 500.0;
+    outer = CATransform3DRotate(outer, M_PI_4, 0, 1, 0);
+    self.outerView.layer.transform = outer;
+    
+    //rotate the inner layer -45 degrees
+    CATransform3D inner = CATransform3DIdentity;
+    inner.m34 = -1.0 / 500.0;
+    inner = CATransform3DRotate(inner, -M_PI_4, 0, 1, 0);
+    self.innerView.layer.transform = inner;
+}
+
+#pragma mark 5.8 & 5.9
+- (void)creatingACube
+{
+    self.containerView = [self createView:[UIScreen mainScreen].bounds bgColor:[UIColor grayColor] superView:self.view];
+    
+    //set up the container sublayer transform
+    CATransform3D perspective = CATransform3DIdentity;
+    perspective.m34 = -1.0 / 500.0;
+    perspective = CATransform3DRotate(perspective, -M_PI_4, 1, 0, 0);
+    perspective = CATransform3DRotate(perspective, -M_PI_4, 0, 1, 0);
+    self.containerView.layer.sublayerTransform = perspective;
+    //add cube face 1
+    CATransform3D transform = CATransform3DMakeTranslation(0, 0, 100);
+    [self addFace:0 withTransform:transform];
+    //add cube face 2
+    transform = CATransform3DMakeTranslation(100, 0, 0);
+    transform = CATransform3DRotate(transform, M_PI_2, 0, 1, 0);
+    [self addFace:1 withTransform:transform];
+    //add cube face 3
+    transform = CATransform3DMakeTranslation(0, -100, 0);
+    transform = CATransform3DRotate(transform, M_PI_2, 1, 0, 0);
+    [self addFace:2 withTransform:transform];
+    //add cube face 4
+    transform = CATransform3DMakeTranslation(0, 100, 0);
+    transform = CATransform3DRotate(transform, -M_PI_2, 1, 0, 0);
+    [self addFace:3 withTransform:transform];
+    //add cube face 5
+    transform = CATransform3DMakeTranslation(-100, 0, 0);
+    transform = CATransform3DRotate(transform, -M_PI_2, 0, 1, 0);
+    [self addFace:4 withTransform:transform];
+    //add cube face 6
+    transform = CATransform3DMakeTranslation(0, 0, -100);
+    transform = CATransform3DRotate(transform, M_PI, 0, 1, 0);
+    [self addFace:5 withTransform:transform];
+}
+
+- (void)addFace:(NSInteger)index withTransform:(CATransform3D)transform
+{
+    //get the face view and add it to the container
+    UIView *face = self.faces[index];
+    [self.containerView addSubview:face];
+    //center the face view within the container
+    CGSize containerSize = self.containerView.bounds.size;
+    face.center = CGPointMake(containerSize.width / 2.0, containerSize.height / 2.0);
+    // apply the transform
+    face.layer.transform = transform;
+    //apply lighting
+    [self applyLightingToFace:face.layer];
+}
+
+- (void)addFacesArray
+{
+    self.faces = [NSMutableArray new];
+    for (int i = 1; i < 7; i++)
+    {
+        UIView * tempView =  [self createView:CGRectMake(0, 0, 200, 200) bgColor:[UIColor whiteColor] superView:self.view];
+        tempView.layer.borderWidth = 1.0;
+        tempView.layer.borderColor = [UIColor lightGrayColor].CGColor;
+        UIButton *tempBtn = [self createButton:tempView.frame buttonText:[NSString stringWithFormat:@"%d",i] superView:tempView];
+        tempBtn.tag = i;
+        [tempBtn addTarget:self action:@selector(cubeBtnClicked:) forControlEvents:UIControlEventTouchUpInside];
+        if (i != 3)
+        {
+            tempView.userInteractionEnabled = NO;//Summary中：实现只响应按钮3的点击
+        }
+        [self.faces addObject:tempView];
+    }
+}
+
+- (void)applyLightingToFace:(CALayer *)face
+{
+    //add lighting layer
+    CALayer *layer = [CALayer layer]; layer.frame = face.bounds;
+    [face addSublayer:layer];
+    //convert the face transform to matrix
+    //(GLKMatrix4 has the same structure as CATransform3D)
+    CATransform3D transform = face.transform;
+    GLKMatrix4 matrix4 = *(GLKMatrix4 *)&transform;
+    GLKMatrix3 matrix3 = GLKMatrix4GetMatrix3(matrix4);
+    //get face normal
+    GLKVector3 normal = GLKVector3Make(0, 0, 1);
+    normal = GLKMatrix3MultiplyVector3(matrix3, normal);
+    normal = GLKVector3Normalize(normal);
+    //get dot product with light direction
+    GLKVector3 light = GLKVector3Normalize(GLKVector3Make(LIGHT_DIRECTION));
+    float dotProduct = GLKVector3DotProduct(light, normal);
+    
+    //set lighting layer opacity
+    CGFloat shadow = 1 + dotProduct - AMBIENT_LIGHT;
+    //算出的数值有问题，想测试的话可以修改数值试一下
+//    shadow = (CGFloat)(arc4random() % 100)/100;
+    UIColor *color = [UIColor colorWithWhite:0 alpha:shadow];
+    layer.backgroundColor = color.CGColor;
+}
+
+- (void)cubeBtnClicked:(UIButton*)sender
+{
+    NSLog(@"%ld cicked",(long)sender.tag);
 }
 
 #pragma mark
@@ -531,6 +806,24 @@
     }
     [superView addSubview:view];
     return view;
+}
+
+- (UILabel*)createLabel:(CGRect)rect labelText:(nonnull NSString*)labelText superView:(UIView*)superView
+{
+    UILabel *label = [[UILabel alloc] initWithFrame:rect];
+    label.text = labelText;
+    label.textAlignment = NSTextAlignmentCenter;
+    [superView addSubview:label];
+    return label;
+}
+
+- (UIButton*)createButton:(CGRect)rect buttonText:(nonnull NSString*)buttonText superView:(UIView*)superView
+{
+    UIButton * btn = [[UIButton alloc] initWithFrame:rect];
+    [btn setTitle:buttonText forState:UIControlStateNormal];
+    [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [superView addSubview:btn];
+    return btn;
 }
 
 - (void)didReceiveMemoryWarning {
